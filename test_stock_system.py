@@ -55,6 +55,11 @@ class TestStockSystem(unittest.TestCase):
         self.assertEqual(system.requisitions[req.requisition_id].receiver_name, "Staff A")
         self.assertEqual(system.products["Sealant MS 541"].quantity, 20)
 
+    def test_return_rejects_unknown_requisition_id(self) -> None:
+        system = create_default_stock_system()
+        with self.assertRaises(ValueError):
+            system.return_items(999, "Staff A")
+
     def test_can_add_new_product_and_borrower(self) -> None:
         system = create_default_stock_system()
         system.add_product("Sealant X 999", "Sealant", "หลอด", "Gray", 10)

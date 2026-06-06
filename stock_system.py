@@ -89,6 +89,8 @@ class StockSystem:
     def return_items(self, requisition_id: int, receiver_name: str) -> None:
         if not receiver_name.strip():
             raise ValueError("receiver name is required")
+        if requisition_id not in self.requisitions:
+            raise ValueError("requisition not found")
         requisition = self.requisitions[requisition_id]
         if requisition.returned:
             raise ValueError("items already returned")
