@@ -97,9 +97,13 @@
         if (!trimmed) continue;
         const [name, qty] = trimmed.split("=");
         if (!name || !qty) {
-          throw new Error("Items format must be Product=Qty, Product2=Qty");
+          throw new Error("Items format must be Product=Qty, Product2=Qty (Qty must be a number)");
         }
-        items[name.trim()] = Number(qty.trim());
+        const quantity = Number(qty.trim());
+        if (!Number.isFinite(quantity)) {
+          throw new Error("Items format must be Product=Qty, Product2=Qty (Qty must be a number)");
+        }
+        items[name.trim()] = quantity;
       }
       return items;
     }
