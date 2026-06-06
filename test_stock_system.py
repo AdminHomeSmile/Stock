@@ -10,7 +10,7 @@ class TestStockSystem(unittest.TestCase):
         self.assertEqual(system.products["Sealant MS 541"].quantity, 20)
         self.assertEqual(system.products["Sealant SN 221"].quantity, 120)
         self.assertEqual(system.products["Sealant SA 271"].quantity, 120)
-        self.assertEqual(system.products["sealant AC 181"].quantity, 20)
+        self.assertEqual(system.products["Sealant AC 181"].quantity, 20)
 
     def test_requisition_deducts_stock(self) -> None:
         system = create_default_stock_system()

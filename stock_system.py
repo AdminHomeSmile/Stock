@@ -108,7 +108,7 @@ def create_default_stock_system() -> StockSystem:
     system.add_product("Sealant MS 541", "Sealant", "หลอด", "N/A", 20)
     system.add_product("Sealant SN 221", "Sealant", "หลอด", "N/A", 120)
     system.add_product("Sealant SA 271", "Sealant", "หลอด", "N/A", 120)
-    system.add_product("sealant AC 181", "Sealant", "หลอด", "N/A", 20)
+    system.add_product("Sealant AC 181", "Sealant", "หลอด", "N/A", 20)
 
     for borrower in [
         "Thisalinee Bunlert",
@@ -125,7 +125,7 @@ def create_default_stock_system() -> StockSystem:
         "Kanitta Faigratoke",
         "Phumphan Tansarojvanich",
         "Nattakit Kanasnakankul",
-        "worapoj phuckpetch",
+        "Worapoj Phuckpetch",
         "Thanchanok Juajeen",
     ]:
         system.add_borrower(borrower)
