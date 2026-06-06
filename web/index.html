@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stock System</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; background: #f5f5f5; }
+    h1, h2 { margin: 8px 0; }
+    section { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin-bottom: 14px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 14px; }
+    form { display: grid; gap: 8px; margin-top: 8px; }
+    input, button { padding: 8px; font-size: 14px; }
+    button { cursor: pointer; }
+    #message { margin-bottom: 12px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Stock System</h1>
+  <div id="message"></div>
+
+  <section>
+    <h2>Current Products</h2>
+    <table id="products-table">
+      <thead>
+        <tr><th>Name</th><th>Type</th><th>Unit</th><th>Color</th><th>Quantity</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Add Product</h2>
+    <form id="add-product-form">
+      <input name="name" placeholder="Product name" required />
+      <input name="product_type" placeholder="Product type" required />
+      <input name="unit" placeholder="Unit" required />
+      <input name="color" placeholder="Color" required />
+      <input name="quantity" type="number" min="0" placeholder="Quantity" required />
+      <button type="submit">Add Product</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>Add Borrower</h2>
+    <form id="add-borrower-form">
+      <input name="borrower_name" placeholder="Borrower name" required />
+      <button type="submit">Add Borrower</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>Borrow / Requisition</h2>
+    <form id="borrow-form">
+      <input name="borrower" placeholder="Borrower name" required />
+      <input name="customer" placeholder="Customer / Company" required />
+      <input name="project_or_location" placeholder="Project / Location" required />
+      <input name="purpose" placeholder="Purpose" required />
+      <input name="requisition_date" type="date" />
+      <input name="items_text" placeholder="Items: Product A=2, Product B=1" required />
+      <button type="submit">Borrow Items</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>Return Items</h2>
+    <form id="return-form">
+      <input name="requisition_id" type="number" min="1" placeholder="Requisition ID" required />
+      <input name="receiver_name" placeholder="Receiver name" required />
+      <button type="submit">Return Items</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>Requisitions / History</h2>
+    <table id="requisitions-table">
+      <thead>
+        <tr><th>ID</th><th>Borrower</th><th>Date</th><th>Items</th><th>Status</th><th>Receiver</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <script>
+    const messageElement = document.getElementById("message");
+
+    function setMessage(text, isError = false) {
+      messageElement.textContent = text || "";
+      messageElement.style.color = isError ? "#b00020" : "#0a7f29";
+    }
+
+    function parseItems(itemsText) {
+      const items = {};
+      for (const part of itemsText.split(",")) {
+        const trimmed = part.trim();
+        if (!trimmed) continue;
+        const [name, qty] = trimmed.split("=");
+        if (!name || !qty) {
+          throw new Error("Items format must be Product=Qty, Product2=Qty (Qty must be a number)");
+        }
+        const quantity = Number(qty.trim());
+        if (!Number.isFinite(quantity)) {
+          throw new Error("Items format must be Product=Qty, Product2=Qty (Qty must be a number)");
+        }
+        items[name.trim()] = quantity;
+      }
+      return items;
+    }
+
+    function appendCells(row, values) {
+      values.forEach((value) => {
+        const cell = document.createElement("td");
+        cell.textContent = String(value);
+        row.appendChild(cell);
+      });
+    }
+
+    function renderState(state) {
+      const productsBody = document.querySelector("#products-table tbody");
+      productsBody.innerHTML = "";
+      state.products.forEach((p) => {
+        const row = document.createElement("tr");
+        appendCells(row, [p.name, p.product_type, p.unit, p.color, p.quantity]);
+        productsBody.appendChild(row);
+      });
+
+      const reqBody = document.querySelector("#requisitions-table tbody");
+      reqBody.innerHTML = "";
+      state.requisitions.forEach((r) => {
+        const row = document.createElement("tr");
+        appendCells(row, [
+          r.requisition_id,
+          r.borrower,
+          r.requisition_date,
+          JSON.stringify(r.items),
+          r.returned ? "returned" : "borrowed",
+          r.receiver_name || "-",
+        ]);
+        reqBody.appendChild(row);
+      });
+    }
+
+    async function callAction(action, payload) {
+      const response = await fetch("/api/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, payload }),
+      });
+      const result = await response.json();
+      if (!result.ok) {
+        throw new Error(result.error || "Action failed");
+      }
+      renderState(result.state);
+      return result.state;
+    }
+
+    async function refreshState() {
+      const response = await fetch("/api/state");
+      const result = await response.json();
+      if (!result.ok) {
+        throw new Error(result.error || "Cannot load state");
+      }
+      renderState(result.state);
+    }
+
+    document.getElementById("add-product-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const form = event.target;
+      try {
+        await callAction("add_product", Object.fromEntries(new FormData(form).entries()));
+        form.reset();
+        setMessage("Product added.");
+      } catch (error) {
+        setMessage(error.message, true);
+      }
+    });
+
+    document.getElementById("add-borrower-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const form = event.target;
+      try {
+        await callAction("add_borrower", Object.fromEntries(new FormData(form).entries()));
+        form.reset();
+        setMessage("Borrower added.");
+      } catch (error) {
+        setMessage(error.message, true);
+      }
+    });
+
+    document.getElementById("borrow-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const form = event.target;
+      const data = Object.fromEntries(new FormData(form).entries());
+      try {
+        data.items = parseItems(data.items_text);
+        delete data.items_text;
+        await callAction("borrow", data);
+        form.reset();
+        setMessage("Borrowed successfully.");
+      } catch (error) {
+        setMessage(error.message, true);
+      }
+    });
+
+    document.getElementById("return-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const form = event.target;
+      try {
+        await callAction("return", Object.fromEntries(new FormData(form).entries()));
+        form.reset();
+        setMessage("Returned successfully.");
+      } catch (error) {
+        setMessage(error.message, true);
+      }
+    });
+
+    refreshState().catch((error) => setMessage(error.message, true));
+  </script>
+</body>
+</html>
