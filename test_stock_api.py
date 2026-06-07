@@ -75,7 +75,7 @@ class TestStockApi(unittest.TestCase):
             },
         )
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_json()["error"], "borrower is not in allowed list")
+        self.assertEqual(response.get_json()["error"], "invalid requisition payload")
 
 
 if __name__ == "__main__":

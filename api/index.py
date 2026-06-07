@@ -56,8 +56,8 @@ def add_product() -> tuple:
         )
     except KeyError as exc:
         return jsonify({"error": f"missing field: {exc.args[0]}"}), 400
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
+    except ValueError:
+        return jsonify({"error": "invalid product payload"}), 400
     return jsonify(_product_to_dict(system.products[payload["name"]])), 201
 
 
@@ -87,8 +87,8 @@ def create_requisition() -> tuple:
         )
     except KeyError as exc:
         return jsonify({"error": f"missing field: {exc.args[0]}"}), 400
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
+    except ValueError:
+        return jsonify({"error": "invalid requisition payload"}), 400
     return jsonify(_requisition_to_dict(requisition)), 201
 
 
@@ -99,8 +99,8 @@ def return_items() -> tuple:
         system.return_items(int(payload["requisition_id"]), payload["receiver_name"])
     except KeyError as exc:
         return jsonify({"error": f"missing field: {exc.args[0]}"}), 400
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
+    except ValueError:
+        return jsonify({"error": "invalid return payload"}), 400
     requisition = system.requisitions[int(payload["requisition_id"])]
     return jsonify(_requisition_to_dict(requisition)), 200
 
