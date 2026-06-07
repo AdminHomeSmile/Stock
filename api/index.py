@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from flask import Flask, jsonify, request
+from flask import Flask, Response, jsonify, request
 
 from stock_system import create_default_stock_system
 
@@ -39,23 +39,23 @@ def _requisition_to_dict(requisition) -> dict:
     }
 
 
-def _bad_request(message: str):
+def _bad_request(message: str) -> tuple[Response, int]:
     return jsonify({"error": message}), 400
 
 
 @app.get("/")
-def root():
+def root() -> Response:
     return jsonify({"message": "Stock API is running"})
 
 
 @app.get("/api/products")
-def list_products():
+def list_products() -> Response:
     products = [_product_to_dict(product) for product in _system.products.values()]
     return jsonify({"products": products})
 
 
 @app.post("/api/products")
-def add_product():
+def add_product() -> tuple[Response, int]:
     payload = request.get_json(silent=True) or {}
 
     try:
@@ -68,14 +68,14 @@ def add_product():
         )
     except KeyError as e:
         return _bad_request(f"missing field: {e.args[0]}")
-    except (TypeError, ValueError) as e:
-        return _bad_request(str(e))
+    except (TypeError, ValueError):
+        return _bad_request("invalid product payload")
 
     return jsonify({"product": _product_to_dict(_system.products[str(payload["name"])])}), 201
 
 
 @app.post("/api/borrowers")
-def add_borrower():
+def add_borrower() -> tuple[Response, int]:
     payload = request.get_json(silent=True) or {}
     borrower_name = str(payload.get("borrower_name", "")).strip()
     if not borrower_name:
@@ -86,7 +86,7 @@ def add_borrower():
 
 
 @app.post("/api/requisitions")
-def create_requisition():
+def create_requisition() -> tuple[Response, int]:
     payload = request.get_json(silent=True) or {}
 
     try:
@@ -104,14 +104,14 @@ def create_requisition():
         )
     except KeyError as e:
         return _bad_request(f"missing field: {e.args[0]}")
-    except (AttributeError, TypeError, ValueError) as e:
-        return _bad_request(str(e))
+    except (AttributeError, TypeError, ValueError):
+        return _bad_request("invalid requisition payload")
 
     return jsonify({"requisition": _requisition_to_dict(requisition)}), 201
 
 
 @app.post("/api/returns")
-def return_items():
+def return_items() -> Response | tuple[Response, int]:
     payload = request.get_json(silent=True) or {}
     try:
         requisition_id = int(payload["requisition_id"])
@@ -119,14 +119,16 @@ def return_items():
         _system.return_items(requisition_id, receiver_name)
     except KeyError as e:
         return _bad_request(f"missing field: {e.args[0]}")
-    except (TypeError, ValueError) as e:
-        return _bad_request(str(e))
+    except (TypeError, ValueError):
+        return _bad_request("invalid return payload")
 
-    requisition = _system.requisitions[requisition_id]
+    requisition = _system.requisitions.get(requisition_id)
+    if requisition is None:
+        return _bad_request("requisition not found")
     return jsonify({"requisition": _requisition_to_dict(requisition)})
 
 
 @app.get("/api/requisitions")
-def list_requisitions():
+def list_requisitions() -> Response:
     requisitions = [_requisition_to_dict(req) for req in _system.requisitions.values()]
     return jsonify({"requisitions": requisitions})
