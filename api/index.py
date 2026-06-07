@@ -58,7 +58,10 @@ def add_product() -> tuple:
         return jsonify({"error": f"missing field: {exc.args[0]}"}), 400
     except ValueError:
         return jsonify({"error": "invalid product payload"}), 400
-    return jsonify(_product_to_dict(system.products[payload["name"]])), 201
+    product = system.products.get(payload["name"])
+    if product is None:
+        return jsonify({"error": "product was not saved"}), 500
+    return jsonify(_product_to_dict(product)), 201
 
 
 @app.post("/borrowers")
@@ -96,12 +99,17 @@ def create_requisition() -> tuple:
 def return_items() -> tuple:
     payload = request.get_json(silent=True) or {}
     try:
-        system.return_items(int(payload["requisition_id"]), payload["receiver_name"])
+        requisition_id = int(payload["requisition_id"])
+        if requisition_id not in system.requisitions:
+            return jsonify({"error": "requisition not found"}), 404
+        system.return_items(requisition_id, payload["receiver_name"])
     except KeyError as exc:
         return jsonify({"error": f"missing field: {exc.args[0]}"}), 400
     except ValueError:
         return jsonify({"error": "invalid return payload"}), 400
-    requisition = system.requisitions[int(payload["requisition_id"])]
+    requisition = system.requisitions.get(requisition_id)
+    if requisition is None:
+        return jsonify({"error": "requisition not found"}), 404
     return jsonify(_requisition_to_dict(requisition)), 200
 
 
