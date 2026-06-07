@@ -107,9 +107,7 @@ def return_items() -> tuple:
         return jsonify({"error": f"missing field: {exc.args[0]}"}), 400
     except ValueError:
         return jsonify({"error": "invalid return payload"}), 400
-    requisition = system.requisitions.get(requisition_id)
-    if requisition is None:
-        return jsonify({"error": "requisition not found"}), 404
+    requisition = system.requisitions[requisition_id]
     return jsonify(_requisition_to_dict(requisition)), 200
 
 
