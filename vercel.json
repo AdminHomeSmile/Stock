@@ -2,6 +2,26 @@
   "version": 2,
   "routes": [
     {
+      "src": "/",
+      "dest": "/public/index.html"
+    },
+    {
+      "src": "/products",
+      "dest": "api/index.py"
+    },
+    {
+      "src": "/borrowers",
+      "dest": "api/index.py"
+    },
+    {
+      "src": "/requisitions",
+      "dest": "api/index.py"
+    },
+    {
+      "src": "/returns",
+      "dest": "api/index.py"
+    },
+    {
       "src": "/(.*)",
       "dest": "api/index.py"
     }

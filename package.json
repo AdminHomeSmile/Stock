@@ -1,0 +1,19 @@
+{
+  "name": "stock-management-system",
+  "version": "1.0.0",
+  "description": "Stock management system with Vercel Web Analytics",
+  "private": true,
+  "scripts": {
+    "test": "echo \"No tests configured\" && exit 0"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^1.4.1"
+  },
+  "keywords": [
+    "stock",
+    "analytics",
+    "vercel"
+  ],
+  "author": "",
+  "license": "ISC"
+}
