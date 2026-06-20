@@ -8,41 +8,65 @@
 - ตัดสต๊อกทันทีเมื่อเบิก
 - การรับคืนสินค้า: ต้องระบุชื่อทีมงานผู้รับคืน
 
-## API สำหรับ Vercel
+โปรเจกต์นี้รองรับการใช้งานผ่าน HTTP API สำหรับ deploy บน Vercel โดยใช้ `api/index.py` เป็น entrypoint
+และยังคงใช้ `stock_system.py` เป็น business logic หลัก
 
-โปรเจกต์นี้รองรับการ deploy แบบ HTTP API บน Vercel โดยใช้ไฟล์ `api/index.py` (Flask + business logic จาก `stock_system.py`)
+## Run tests
 
-- `GET /products` รายการสินค้า
-- `POST /products` เพิ่มสินค้า
-- `POST /borrowers` เพิ่มผู้มีสิทธิ์เบิก
-- `POST /requisitions` เบิกสินค้า
-- `POST /returns` คืนสินค้า
-- `GET /requisitions` รายการใบเบิก
+```bash
+python -m unittest -v
+```
 
-ตัวอย่าง payload:
+## Run API locally
+
+1. ติดตั้ง dependency
+
+```bash
+pip install -r requirements.txt
+```
+
+2. รัน Flask app
+
+```bash
+flask --app api.index run
+```
+
+3. ทดสอบ endpoint ตัวอย่าง
+
+```bash
+curl http://127.0.0.1:5000/api/products
+```
+
+## API endpoints
+
+- `GET /api/products` - แสดงรายการสินค้า
+- `POST /api/products` - เพิ่มสินค้า
+- `POST /api/borrowers` - เพิ่มผู้มีสิทธิ์เบิก
+- `POST /api/requisitions` - สร้างใบเบิกสินค้า
+- `POST /api/returns` - รับคืนสินค้า
+- `GET /api/requisitions` - แสดงรายการใบเบิก
+
+ตัวอย่าง `POST /api/requisitions`:
 
 ```json
 {
   "borrower": "Thisalinee Bunlert",
   "customer": "ABC Co., Ltd.",
-  "project_or_location": "Sample Project",
+  "project_or_location": "Project A",
   "purpose": "Demo",
   "requisition_date": "2026-06-06",
   "items": {
-    "Sealant MS 541": 1
+    "Sealant MS 541": 2
   }
 }
 ```
 
-## Deploy ไปยัง Vercel
+## Deploy on Vercel
 
 1. Push โค้ดขึ้น GitHub repository
-2. Import repository นี้ใน Vercel
-3. Vercel จะอ่าน `vercel.json` และ deploy Python API จาก `api/index.py`
-4. ทดสอบ endpoint หลัง deploy เช่น `GET /products`
+2. ไปที่ Vercel > Add New Project
+3. เลือก repository `AdminHomeSmile/Stock`
+4. Deploy ได้ทันที (โปรเจกต์มี `vercel.json` และ `api/index.py` พร้อมใช้งาน)
 
-รันเทสต์:
-
-```bash
-python -m unittest -v
-```
+หมายเหตุ: ใน serverless environment state จะอยู่ในหน่วยความจำของ instance ชั่วคราว
+หากมี cold start หรือ scale out ข้อมูลที่เพิ่มผ่าน API อาจไม่คงอยู่ถาวร
